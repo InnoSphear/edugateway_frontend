@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://edubackend-1lay.onrender.com/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://edubackend-56k8.onrender.com/api';
 
 const AppContext = createContext();
 
