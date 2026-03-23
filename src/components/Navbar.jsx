@@ -36,20 +36,20 @@ const Navbar = () => {
               <span style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>Education Gateway</span>
             </Link>
 
-            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '24px' }}>
+            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto', marginRight: '24px', flexWrap: 'wrap' }}>
               {[
-                { label: 'All Streams', path: '/streams' },
                 { label: 'All Courses', path: '/courses' },
-                { label: 'Engineering', path: '/streams/engineering' },
-                { label: 'Management', path: '/streams/management' },
-                { label: 'Medical', path: '/streams/medical' },
-                { label: 'Design', path: '/streams/design' },
-                { label: 'Explore', path: '/colleges' },
-                { label: 'Online', path: '/online' }
+                { label: 'B.Tech', path: '/streams/engineering' },
+                { label: 'MBA', path: '/streams/management' },
+                { label: 'M.Tech', path: '/streams/mtech' },
+                { label: 'MBBS', path: '/streams/medical' },
+                { label: 'B.Com', path: '/streams/commerce' },     
+                { label: 'Exams', path: '/exams' },
+                { label: 'News', path: '/news' },
               ].map(link => (
                 <Link key={link.label} to={link.path} style={{
-                  padding: '8px 14px', fontSize: '15px', fontWeight: 600,
-                  color: '#1e293b', textDecoration: 'none', transition: 'all 0.2s', borderRadius: '6px'
+                  padding: '6px 10px', fontSize: '13px', fontWeight: 600,
+                  color: '#1e293b', textDecoration: 'none', transition: 'all 0.2s', borderRadius: '4px'
                 }}
                   onMouseEnter={e => { e.target.style.color = '#f97316'; e.target.style.background = '#fff7ed'; }}
                   onMouseLeave={e => { e.target.style.color = '#1e293b'; e.target.style.background = 'transparent'; }}

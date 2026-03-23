@@ -28,6 +28,8 @@ import AdminNews from './pages/admin/AdminNews';
 import AdminBlogs from './pages/admin/AdminBlogs';
 import AdminLeads from './pages/admin/AdminLeads';
 
+import AdminLayout from './components/admin/AdminLayout';
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -35,16 +37,20 @@ const App = () => {
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Outfit', system-ui, -apple-system, sans-serif", background: '#f8fafc' }}>
           <Routes>
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/colleges" element={<AdminColleges />} />
-            <Route path="/admin/colleges/new" element={<AdminCollegeForm />} />
-            <Route path="/admin/colleges/:id" element={<AdminCollegeForm />} />
-            <Route path="/admin/streams" element={<AdminStreams />} />
-            <Route path="/admin/courses" element={<AdminCourses />} />
-            <Route path="/admin/exams" element={<AdminExams />} />
-            <Route path="/admin/news" element={<AdminNews />} />
-            <Route path="/admin/blogs" element={<AdminBlogs />} />
-            <Route path="/admin/leads" element={<AdminLeads />} />
+            
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="colleges" element={<AdminColleges />} />
+              <Route path="colleges/new" element={<AdminCollegeForm />} />
+              <Route path="colleges/:id" element={<AdminCollegeForm />} />
+              <Route path="streams" element={<AdminStreams />} />
+              <Route path="courses" element={<AdminCourses />} />
+              <Route path="exams" element={<AdminExams />} />
+              <Route path="news" element={<AdminNews />} />
+              <Route path="blogs" element={<AdminBlogs />} />
+              <Route path="leads" element={<AdminLeads />} />
+            </Route>
+            
             <Route path="*" element={
               <>
                 <Navbar />
