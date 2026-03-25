@@ -1,74 +1,83 @@
 import { Link } from 'react-router-dom';
+import { getCollegeRouteParam, normalizeCollege, resolveMediaUrl } from '../utils/content';
+import { openCounsellingPopup } from '../utils/popup';
 
 const CollegeCard = ({ college }) => {
-  // Try to use the first course's fee
-  const minFee = college.course && college.course.length > 0 ? college.course[0].fee : 'N/A';
+  const item = normalizeCollege(college);
+  const minFee = item.course?.[0]?.fee || item.totalFees || 'N/A';
+  const coverImage = resolveMediaUrl(item.image?.[0], 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80');
+  const routeParam = getCollegeRouteParam(item);
 
   return (
-    <Link to={`/colleges/${college._id}`} style={{ textDecoration: 'none', display: 'block' }}>
+    <Link to={`/colleges/${routeParam}`} style={{ textDecoration: 'none', display: 'block' }}>
       <div style={{
-        background: 'white', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-        transition: 'all 0.3s ease', cursor: 'pointer', height: '100%', border: '1px solid #f1f5f9',
+        background: 'white', borderRadius: '22px', overflow: 'hidden', boxShadow: '0 20px 60px rgba(15,23,42,0.08)',
+        transition: 'all 0.3s ease', cursor: 'pointer', height: '100%', border: '1px solid rgba(148,163,184,0.16)',
         display: 'flex', flexDirection: 'column'
       }}
-        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.1)'; e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#f1f5f9'; }}
+        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 26px 70px rgba(15,23,42,0.14)'; e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.borderColor = 'rgba(249,115,22,0.22)'; }}
+        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 20px 60px rgba(15,23,42,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(148,163,184,0.16)'; }}
       >
-        <div style={{ position: 'relative', height: '110px', background: '#f8fafc' }}>
-          {college.image && college.image.length > 0 ? (
-            <img src={college.image[0]} alt={college.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)' }}>
-              <span style={{ color: 'white', fontSize: '28px', fontWeight: 800 }}>{college.name[0]}</span>
-            </div>
-          )}
-          
-          <div style={{ position: 'absolute', top: '8px', left: '8px', background: 'rgba(255,255,255,0.95)', padding: '2px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {college.logo ? (
-               <img src={college.logo} alt="logo" style={{ width: '30px', height: '30px', objectFit: 'contain', borderRadius: '4px' }} />
+        <div style={{ position: 'relative', height: '180px', background: '#f8fafc' }}>
+          <img src={coverImage} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.72))' }} />
+
+          <div style={{ position: 'absolute', top: '14px', left: '14px', background: 'rgba(255,255,255,0.96)', padding: '4px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 24px rgba(15,23,42,0.12)' }}>
+            {item.logo ? (
+               <img src={item.logo} alt="logo" style={{ width: '44px', height: '44px', objectFit: 'contain', borderRadius: '10px', background: 'white' }} />
             ) : (
-               <div style={{ width: '30px', height: '30px', background: '#2563eb', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px' }}>{college.name[0]}</div>
+               <div style={{ width: '44px', height: '44px', background: '#0f172a', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '10px', fontWeight: 'bold', fontSize: '14px' }}>{item.name[0]}</div>
             )}
           </div>
-          
-          <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
-            {college.category && <span style={{ background: '#3b82f6', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '9px', fontWeight: 700 }}>{college.category}</span>}
+
+          <div style={{ position: 'absolute', top: '14px', right: '14px' }}>
+            {item.category && <span style={{ background: '#f97316', color: 'white', padding: '7px 12px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>{item.category}</span>}
+          </div>
+
+          <div style={{ position: 'absolute', left: '18px', right: '18px', bottom: '18px', color: 'white' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 800, lineHeight: 1.3, marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.name}</h3>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', fontSize: '12px', opacity: 0.95 }}>
+              <span>{item.location?.city}{item.location?.state ? `, ${item.location.state}` : ''}</span>
+              <span>{item.rating}/5</span>
+              {item.ranking?.rank ? <span>{item.ranking.authority} #{item.ranking.rank}</span> : null}
+            </div>
           </div>
         </div>
 
-        <div style={{ padding: '12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '6px', lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{college.name}</h3>
-          
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '10px', flexWrap: 'wrap' }}>
-            {college.course && college.course.slice(0, 2).map((c, i) => (
-              <span key={i} style={{ background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 600 }}>{c.courseName}</span>
+        <div style={{ padding: '22px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.7, marginBottom: '16px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.description}</p>
+
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '18px', flexWrap: 'wrap' }}>
+            {item.course?.slice(0, 2).map((c, i) => (
+              <span key={i} style={{ background: '#fff4eb', color: '#c2410c', padding: '6px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>{c.courseName}</span>
             ))}
-            {college.course?.length > 2 && <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 600 }}>+{college.course.length - 2} More</span>}
+            {item.course?.length > 2 && <span style={{ background: '#f8fafc', color: '#334155', padding: '6px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700 }}>+{item.course.length - 2} More</span>}
           </div>
 
-          <div style={{ marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #f1f5f9', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+          <div style={{ marginTop: 'auto', paddingTop: '18px', borderTop: '1px solid #e2e8f0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
-              <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '1px' }}>First Year Fee</span>
-              <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>{minFee}</p>
+              <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Fees</span>
+              <p style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>{minFee}</p>
             </div>
-            {college.averagePlacement && (
+            {item.averagePlacement && (
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '1px' }}>Avg Package</span>
-                <p style={{ fontSize: '12px', fontWeight: 700, color: '#10b981' }}>{college.averagePlacement}</p>
+                <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Avg Package</span>
+                <p style={{ fontSize: '15px', fontWeight: 800, color: '#0f766e' }}>{item.averagePlacement}</p>
               </div>
             )}
           </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '12px' }}>
-            <button style={{ background: 'transparent', color: '#f97316', border: '1px solid #fed7aa', padding: '6px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center' }}
-              onMouseEnter={e => { e.target.style.background = '#fff7ed'; e.target.style.borderColor = '#fdba74'; }}
-              onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.borderColor = '#fed7aa'; }}
-              onClick={e => { e.preventDefault(); }}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '18px' }}>
+            <button style={{ background: 'transparent', color: '#f97316', border: '1px solid #fdba74', padding: '10px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center' }}
+              onMouseEnter={e => { e.target.style.background = '#fff7ed'; e.target.style.borderColor = '#fb923c'; }}
+              onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.borderColor = '#fdba74'; }}
+              onClick={e => { e.preventDefault(); if (item.brochureUrl) window.open(item.brochureUrl, '_blank', 'noopener,noreferrer'); }}
             >Brochure</button>
-            <button style={{ background: '#f97316', color: 'white', border: 'none', padding: '6px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center' }}
-              onMouseEnter={e => e.target.style.background = '#ea580c'}
-              onMouseLeave={e => e.target.style.background = '#f97316'}
-              onClick={e => { e.preventDefault(); }}
+            <button style={{ background: '#0f172a', color: 'white', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', textAlign: 'center' }}
+              onMouseEnter={e => e.target.style.background = '#1e293b'}
+              onMouseLeave={e => e.target.style.background = '#0f172a'}
+              onClick={e => { e.preventDefault(); openCounsellingPopup({ course: item.course?.[0]?.courseName || '', city: item.location?.city || '' }); }}
             >Apply Now</button>
           </div>
         </div>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { streamAPI, collegeAPI } from '../utils/api';
 import CollegeCard from '../components/CollegeCard';
+import { fallbackColleges } from '../data/fallbackContent';
+import { mergeWithFallback, normalizeCollege } from '../utils/content';
 
 const StreamPage = () => {
   const { slug } = useParams();
@@ -18,9 +20,13 @@ const StreamPage = () => {
           collegeAPI.getAll({ stream: slug })
         ]);
         setStream(streamRes.data);
-        setColleges(collegeRes.data.colleges);
+        const fallbackMatches = fallbackColleges
+          .map(normalizeCollege)
+          .filter((college) => college.category.toLowerCase().includes(slug.toLowerCase()) || (college.tags || []).some((tag) => tag.includes(slug.toLowerCase())));
+        setColleges(mergeWithFallback((collegeRes.data.colleges || []).map(normalizeCollege), fallbackMatches, 18));
       } catch (err) {
         console.error('Failed to fetch stream:', err);
+        setColleges(fallbackColleges.map(normalizeCollege).filter((college) => college.category.toLowerCase().includes(slug.toLowerCase()) || (college.tags || []).some((tag) => tag.includes(slug.toLowerCase()))));
       }
       setLoading(false);
     };

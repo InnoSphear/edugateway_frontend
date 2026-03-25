@@ -34,7 +34,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <AppProvider>
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Outfit', system-ui, -apple-system, sans-serif", background: '#f8fafc' }}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Manrope', system-ui, -apple-system, sans-serif" }}>
           <Routes>
             <Route path="/admin/login" element={<AdminLogin />} />
             

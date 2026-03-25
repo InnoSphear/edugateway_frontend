@@ -1,274 +1,276 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import BlogCard from '../components/BlogCard';
 import CollegeCard from '../components/CollegeCard';
 import ExamCard from '../components/ExamCard';
-import BlogCard from '../components/BlogCard';
-import { collegeAPI, examAPI, blogAPI, streamAPI } from '../utils/api';
+import NewsCard from '../components/NewsCard';
+import { blogAPI, collegeAPI, examAPI, newsAPI } from '../utils/api';
+import { normalizeCollege } from '../utils/content';
+import { openCounsellingPopup } from '../utils/popup';
 
-const dummyColleges = [
-  { _id: '1', name: 'Indian Institute of Technology Bombay', category: 'Engineering', logo: '', image: ['https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1000'], course: [{courseName: 'B.Tech Computer Science', fee: '₹2.5L/yr'}], averagePlacement: '₹20 LPA' },
-  { _id: '2', name: 'All India Institute of Medical Sciences', category: 'Medical', logo: '', image: ['https://images.unsplash.com/photo-1519452285856-425f383e6015?q=80&w=1000'], course: [{courseName: 'MBBS', fee: '₹1.5L/yr'}], averagePlacement: '₹14 LPA' },
-  { _id: '3', name: 'Indian Institute of Management Ahmedabad', category: 'Management', logo: '', image: ['https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?q=80&w=1000'], course: [{courseName: 'MBA', fee: '₹11L/yr'}], averagePlacement: '₹28 LPA' },
-  { _id: '4', name: 'National Institute of Technology Trichy', category: 'Engineering', logo: '', image: ['https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1000'], course: [{courseName: 'B.Tech Electrical', fee: '₹1.8L/yr'}], averagePlacement: '₹12 LPA' }
-];
-
-const dummyExams = [
-  { _id: '1', name: 'JEE Main 2024', fullName: 'Joint Entrance Examination', conductingBody: 'NTA', examLevel: 'National', status: 'upcoming' },
-  { _id: '2', name: 'NEET UG 2024', fullName: 'National Eligibility cum Entrance Test', conductingBody: 'NTA', examLevel: 'National', status: 'upcoming' },
-  { _id: '3', name: 'CAT 2024', fullName: 'Common Admission Test', conductingBody: 'IIMs', examLevel: 'National', status: 'upcoming' }
-];
-
-const dummyBlogs = [
-  { _id: '1', title: 'Top 10 Emerging Career Options in 2024', category: 'Career Focus', image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000', views: 1200, createdAt: new Date().toISOString() },
-  { _id: '2', title: 'How to Choose the Right Engineering Branch?', category: 'College Guide', image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=1000', views: 850, createdAt: new Date().toISOString() },
-  { _id: '3', title: 'Last Minute Preparation Tips for JEE Main', category: 'Exams', image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=1000', views: 2300, createdAt: new Date().toISOString() }
-];
-
-const PaginationControls = ({ current, total, onPageChange }) => {
-  if (total <= 1) return null;
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
-      {Array.from({ length: total }).map((_, i) => (
-        <button
-          key={i}
-          onClick={() => onPageChange(i)}
-          style={{
-            width: '10px', height: '10px', borderRadius: '50%', padding: 0,
-            border: current === i ? 'none' : '1px solid #cbd5e1',
-            background: current === i ? '#2563eb' : 'transparent',
-            cursor: 'pointer', transition: 'all 0.3s'
-          }}
-          aria-label={`Page ${i + 1}`}
-        />
-      ))}
-    </div>
-  );
-};
+const tabs = ['All', 'Engineering', 'Management', 'Medical', 'Private Medical', 'MBA'];
 
 const Home = () => {
-  const [featuredColleges, setFeaturedColleges] = useState([]);
-  const [featuredExams, setFeaturedExams] = useState([]);
-  const [featuredBlogs, setFeaturedBlogs] = useState([]);
-  const [streams, setStreams] = useState([]);
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('All');
+  const [colleges, setColleges] = useState([]);
+  const [exams, setExams] = useState([]);
+  const [blogs, setBlogs] = useState([]);
+  const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  const [isMobile, setIsMobile] = useState(false);
-  
-  const [collegesPage, setCollegesPage] = useState(0);
-  const [examsPage, setExamsPage] = useState(0);
-  const [blogsPage, setBlogsPage] = useState(0);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [colleges, exams, blogs, streamsData] = await Promise.all([
-          collegeAPI.getFeatured(),
+        const [collegeRes, examRes, blogRes, newsRes] = await Promise.all([
+          collegeAPI.getAll({ limit: 40, page: 1 }),
           examAPI.getFeatured(),
           blogAPI.getFeatured(),
-          streamAPI.getAll()
+          newsAPI.getFeatured(),
         ]);
-        setFeaturedColleges(colleges.data?.length ? colleges.data : dummyColleges);
-        setFeaturedExams(exams.data?.length ? exams.data : dummyExams);
-        setFeaturedBlogs(blogs.data?.length ? blogs.data : dummyBlogs);
-        setStreams(streamsData.data);
-      } catch (err) {
-        console.error('Failed to fetch data, using dummy data', err);
-        setFeaturedColleges(dummyColleges);
-        setFeaturedExams(dummyExams);
-        setFeaturedBlogs(dummyBlogs);
+
+        setColleges((collegeRes.data?.colleges || []).map(normalizeCollege));
+        setExams(examRes.data || []);
+        setBlogs(blogRes.data || []);
+        setNews(newsRes.data || []);
+      } catch (error) {
+        console.error('Failed to fetch homepage data:', error);
+        setColleges([]);
+        setExams([]);
+        setBlogs([]);
+        setNews([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     fetchData();
   }, []);
 
-  const quickSearches = [
-    { label: 'Top MBA Colleges', query: 'MBA' },
-    { label: 'Best Engineering', query: 'B.Tech' },
-    { label: 'Top Medical', query: 'MBBS' },
-    { label: 'Government', query: 'Government' },
-    { label: 'Affordable', query: 'feesMax=100000' },
-    { label: '4+ Rating', query: 'rating=4' }
-  ];
+  const mergedColleges = useMemo(() => colleges, [colleges]);
 
-  const getPaginatedList = (list, page) => {
-    if (!isMobile) return list;
-    const itemsPerPage = 2; // Show 2 items per page on mobile
-    const start = page * itemsPerPage;
-    return list.slice(start, start + itemsPerPage);
-  };
+  const featuredPrograms = useMemo(() => {
+    if (activeTab === 'All') return mergedColleges.slice(0, 8);
+    const keyMap = { Engineering: 'engineering', Management: 'management', Medical: 'medical', 'Private Medical': 'private-medical', MBA: 'mba' };
+    return mergedColleges.filter((college) => (
+      college.category?.toLowerCase().includes(keyMap[activeTab])
+      || (college.tags || []).some((tag) => tag.includes(keyMap[activeTab]))
+    )).slice(0, 8);
+  }, [activeTab, mergedColleges]);
 
-  const getPageCount = (list) => {
-    if (!isMobile) return 0;
-    return Math.ceil(list.length / 2);
+  const categorySections = useMemo(() => ([
+    { title: 'Top Engineering Colleges', key: 'engineering' },
+    { title: 'Top Management Colleges', key: 'management' },
+    { title: 'Top Private Medical Colleges', key: 'private-medical' },
+    { title: 'Top MBA Colleges', key: 'mba' },
+  ].map((section) => ({
+    ...section,
+    items: mergedColleges.filter((college) => (
+      college.category?.toLowerCase().includes(section.key)
+      || (college.tags || []).some((tag) => tag.includes(section.key))
+    )).slice(0, 4),
+  }))), [mergedColleges]);
+
+  const handleSearch = () => {
+    const value = query.trim();
+    navigate(value ? `/colleges?search=${encodeURIComponent(value)}` : '/colleges');
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
-      <section style={{ 
-        background: 'linear-gradient(to right, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.7)), url("https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=2070")', 
-        backgroundSize: 'cover', backgroundPosition: 'center', padding: '120px 24px 100px', textAlign: 'center', position: 'relative' 
-      }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', position: 'relative' }}>
-          <h1 style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800, color: 'white', marginBottom: '20px', lineHeight: 1.15, letterSpacing: '-1.5px' }}>
-            Find Your Dream College in India
-          </h1>
-          <p style={{ fontSize: '18px', color: '#e2e8f0', marginBottom: '40px', maxWidth: '750px', margin: '0 auto 40px', fontWeight: 500 }}>
-            <span style={{ margin: '0 12px' }}>✔ 6000+ Colleges</span>
-            <span style={{ margin: '0 12px' }}>✔ 200+ Exams</span>
-            <span style={{ margin: '0 12px' }}>✔ Detailed Reviews</span>
-            <span style={{ margin: '0 12px' }}>✔ Free Counselling</span>
-          </p>
-          <div style={{ background: 'white', borderRadius: '12px', padding: '10px', display: 'flex', gap: '10px', maxWidth: '800px', margin: '0 auto', flexWrap: 'wrap', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', borderRight: '1px solid #e2e8f0', paddingRight: '10px' }}>
-              <span style={{ padding: '0 16px', color: '#94a3b8', fontSize: '20px' }}>🔍</span>
-              <input type="text" placeholder="Search for Colleges, Exams, Courses and more..." style={{ width: '100%', minWidth: '200px', padding: '16px 0', border: 'none', fontSize: '16px', outline: 'none', color: '#0f172a' }} />
+    <div>
+      <section style={{ padding: '40px 0 24px' }}>
+        <div className="container">
+          <div style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: '36px',
+            padding: 'clamp(28px, 6vw, 64px)',
+            background: 'radial-gradient(circle at top left, rgba(251,146,60,0.28), transparent 26%), linear-gradient(135deg, #fff7ed 0%, #ffffff 45%, #fff1f2 100%)',
+            border: '1px solid rgba(148,163,184,0.14)',
+            boxShadow: '0 30px 90px rgba(15,23,42,0.08)',
+          }}>
+            <div style={{ maxWidth: '760px', position: 'relative', zIndex: 1 }}>
+              <span style={{ display: 'inline-flex', padding: '8px 14px', borderRadius: '999px', background: '#ffffff', color: '#c2410c', fontWeight: 700, fontSize: '0.84rem', boxShadow: '0 12px 28px rgba(15,23,42,0.06)' }}>
+                Get your college of choice and enhance your life
+              </span>
+              <h1 style={{ marginTop: '18px', fontSize: 'clamp(2.2rem, 5vw, 4.5rem)', lineHeight: 1.04, fontWeight: 900, letterSpacing: '-0.05em', color: '#0f172a' }}>
+                Explore top colleges, exams, news and admissions in one place.
+              </h1>
+              <p style={{ marginTop: '18px', fontSize: '1.05rem', lineHeight: 1.8, color: '#475569', maxWidth: '640px' }}>
+                Discover engineering, medical, MBA and management colleges with integrated course fees, multi-image galleries, fallback content and responsive pagination.
+              </p>
+
+              <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', maxWidth: '580px' }}>
+                {[
+                  { label: 'Institutions', value: '6000+' },
+                  { label: 'Exams', value: '200+' },
+                  { label: 'Courses', value: '200+' },
+                  { label: 'Counselling', value: '24/7' },
+                ].map((item) => (
+                  <div key={item.label} style={{ background: 'rgba(255,255,255,0.92)', padding: '16px', borderRadius: '22px', border: '1px solid rgba(148,163,184,0.12)' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a' }}>{item.value}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{item.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: '28px', background: 'white', borderRadius: '24px', padding: '12px', display: 'flex', flexWrap: 'wrap', gap: '10px', boxShadow: '0 22px 50px rgba(15,23,42,0.08)' }}>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="Search colleges, exams, MBA, MBBS, fees..."
+                  style={{ flex: 1, minWidth: '220px', border: 'none', outline: 'none', fontSize: '1rem', padding: '14px 12px', background: 'transparent' }}
+                />
+                <button onClick={handleSearch} style={{ minWidth: '140px', border: 'none', borderRadius: '18px', background: '#f97316', color: 'white', fontWeight: 800, cursor: 'pointer', padding: '14px 18px' }}>
+                  Search
+                </button>
+              </div>
+
+              <div style={{ marginTop: '18px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {['JEE Main', 'NEET', 'CAT', 'Private Medical', 'Top Engineering'].map((item) => (
+                  <Link key={item} to={`/colleges?search=${encodeURIComponent(item)}`} style={{ padding: '8px 12px', borderRadius: '999px', background: '#ffffff', color: '#334155', fontSize: '0.85rem', fontWeight: 700, border: '1px solid rgba(148,163,184,0.14)' }}>
+                    {item}
+                  </Link>
+                ))}
+              </div>
+
+              <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                <button onClick={() => openCounsellingPopup()} style={{ padding: '12px 18px', borderRadius: '999px', border: 'none', background: '#0f172a', color: 'white', fontWeight: 800, cursor: 'pointer' }}>
+                  Get Counselling
+                </button>
+                <Link to="/colleges" style={{ padding: '12px 18px', borderRadius: '999px', background: 'white', color: '#0f172a', fontWeight: 800, border: '1px solid rgba(148,163,184,0.16)' }}>
+                  Explore Colleges
+                </Link>
+              </div>
             </div>
-            <button style={{ background: '#f97316', color: 'white', border: 'none', padding: '0 40px', borderRadius: '8px', fontSize: '16px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap' }}
-              onMouseEnter={e => e.target.style.background = '#ea580c'}
-              onMouseLeave={e => e.target.style.background = '#f97316'}
-            >Search</button>
           </div>
-          <div style={{ marginTop: '32px', display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <span style={{ color: 'white', fontSize: '14px', fontWeight: 600, alignSelf: 'center', marginRight: '8px' }}>Popular:</span>
-            {quickSearches.map((q, i) => (
-              <Link key={i} to={`/colleges?search=${q.query}`} style={{
-                background: 'rgba(255,255,255,0.1)', color: 'white', padding: '6px 16px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)',
-                fontSize: '13px', textDecoration: 'none', backdropFilter: 'blur(10px)', transition: 'all 0.2s', fontWeight: 500
-              }}
-                onMouseEnter={e => { e.target.style.background = 'rgba(255,255,255,0.2)'; e.target.style.borderColor = 'rgba(255,255,255,0.4)'; }}
-                onMouseLeave={e => { e.target.style.background = 'rgba(255,255,255,0.1)'; e.target.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-              >{q.label}</Link>
+        </div>
+      </section>
+
+      <section style={{ padding: '18px 0 28px' }}>
+        <div className="container">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+            {[
+              { title: 'All Exams', text: 'Get dates, eligibility, prep tips and updates.', link: '/exams' },
+              { title: 'All Colleges', text: 'Browse colleges by ranking, fees and stream.', link: '/colleges' },
+              { title: 'Latest News', text: 'Track admissions, forms, counselling and results.', link: '/news' },
+              { title: 'Career Blogs', text: 'Read practical guides for branches and admissions.', link: '/blogs' },
+            ].map((card) => (
+              <Link key={card.title} to={card.link} style={{ background: 'white', borderRadius: '24px', padding: '22px', border: '1px solid rgba(148,163,184,0.12)', boxShadow: '0 18px 50px rgba(15,23,42,0.05)' }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>{card.title}</div>
+                <div style={{ marginTop: '8px', color: '#64748b', lineHeight: 1.7 }}>{card.text}</div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {streams.length > 0 && (
-      <section className="container" style={{ padding: '60px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.5px' }}>Browse by Stream</h2>
-            <p style={{ color: '#64748b', fontSize: '15px' }}>Explore colleges by your preferred field of study</p>
+      <section style={{ padding: '24px 0 18px' }}>
+        <div className="container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '16px', flexWrap: 'wrap', marginBottom: '22px' }}>
+            <div>
+              <h2 style={{ fontSize: 'clamp(1.65rem, 3vw, 2.5rem)', fontWeight: 900, color: '#0f172a' }}>Top Colleges in India 2026</h2>
+              <p style={{ color: '#64748b', marginTop: '6px' }}>Programs, fees and rankings now sit directly inside the college card and detail model, using the backend college list.</p>
+            </div>
+            <Link to="/colleges" style={{ padding: '12px 16px', borderRadius: '999px', background: '#0f172a', color: 'white', fontWeight: 700 }}>View all colleges</Link>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '11px 16px',
+                  borderRadius: '999px',
+                  border: activeTab === tab ? 'none' : '1px solid rgba(148,163,184,0.18)',
+                  background: activeTab === tab ? '#f97316' : 'white',
+                  color: activeTab === tab ? 'white' : '#334155',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid-4">
+            {(loading ? [] : featuredPrograms).map((college) => (
+              <CollegeCard key={college._id} college={college} />
+            ))}
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-          {streams.map((stream, i) => (
-            <Link key={stream._id} to={`/streams/${stream.slug}`} style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: 'white', borderRadius: '16px', padding: '24px', textAlign: 'center',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)', transition: 'all 0.3s ease', cursor: 'pointer', height: '100%'
-              }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.12)'; e.currentTarget.style.borderColor = '#2563eb'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = 'transparent'; }}
-              >
-                <div style={{
-                  width: '56px', height: '56px', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                  borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 14px', boxShadow: '0 4px 12px rgba(37,99,235,0.3)'
-                }}>
-                  <span style={{ color: 'white', fontSize: '24px', fontWeight: 800 }}>{stream.name[0]}</span>
+      </section>
+
+      <section style={{ padding: '6px 0 24px' }}>
+        <div className="container" style={{ display: 'grid', gap: '28px' }}>
+          {categorySections.map((section) => (
+            section.items.length > 0 ? (
+              <div key={section.title}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '14px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#0f172a' }}>{section.title}</h2>
+                    <p style={{ color: '#64748b', marginTop: '6px' }}>Backend college data shown directly on the homepage.</p>
+                  </div>
+                  <Link to={`/colleges?search=${encodeURIComponent(section.key.replace('-', ' '))}`} style={{ color: '#c2410c', fontWeight: 700 }}>
+                    View all
+                  </Link>
                 </div>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>{stream.name}</h3>
+                <div className="grid-4">
+                  {section.items.map((college) => (
+                    <CollegeCard key={`${section.key}-${college._id}`} college={college} />
+                  ))}
+                </div>
               </div>
-            </Link>
+            ) : null
           ))}
         </div>
       </section>
-      )}
 
-      <section className="container" style={{ padding: '60px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+      <section style={{ padding: '30px 0' }}>
+        <div className="container" style={{ display: 'grid', gap: '28px' }}>
           <div>
-            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.5px' }}>Top Ranked Colleges</h2>
-            <p style={{ color: '#64748b', fontSize: '15px' }}>Discover the best institutions in India across all streams</p>
-          </div>
-          <Link to="/colleges" style={{
-            background: 'white', color: '#2563eb', padding: '10px 24px',
-            borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px',
-            border: '1px solid #2563eb', transition: 'all 0.2s'
-          }}>View All →</Link>
-        </div>
-        {loading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' }}>
-            {[1, 2, 3, 4].map(i => <div key={i} style={{ height: '320px', background: '#e2e8f0', borderRadius: '12px', animation: 'pulse 2s infinite' }} />)}
-          </div>
-        ) : (
-          <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
-              {getPaginatedList(featuredColleges, collegesPage).map(college => <CollegeCard key={college._id} college={college} />)}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>Popular Exams</h2>
+                <p style={{ color: '#64748b', marginTop: '6px' }}>Updated cards with clearer dates and responsive spacing.</p>
+              </div>
+              <Link to="/exams" style={{ color: '#c2410c', fontWeight: 700 }}>View all exams</Link>
             </div>
-            <PaginationControls current={collegesPage} total={getPageCount(featuredColleges)} onPageChange={setCollegesPage} />
-          </>
-        )}
-      </section>
+            <div className="grid-4">
+              {exams.slice(0, 4).map((exam) => <ExamCard key={exam._id} exam={exam} />)}
+            </div>
+          </div>
 
-      <section  style={{ background: '#0f172a', color: 'white', padding: '80px 24px' }}>
-        <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '24px' }}>Why Choose Education Gateway?</h2>
-          <p style={{ fontSize: '16px', color: '#cbd5e1', marginBottom: '40px', lineHeight: 1.6 }}>We simplify the college admission process by providing accurate, up-to-date information, expert counseling, and a seamless application experience. Your educational journey begins here.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '32px', width: '100%' }}>
-            <div>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📚</div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Extensive Database</h3>
-              <p style={{ fontSize: '14px', color: '#94a3b8' }}>Access detailed information on over 10,000 top colleges and universities.</p>
-            </div>
-            <div>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🤝</div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Expert Counseling</h3>
-              <p style={{ fontSize: '14px', color: '#94a3b8' }}>Get personalized guidance from industry experts to make informed decisions.</p>
-            </div>
-            <div>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚀</div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Easy Application</h3>
-              <p style={{ fontSize: '14px', color: '#94a3b8' }}>Apply to multiple colleges with a single application form.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="container" style={{ padding: '60px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.5px' }}>Popular Exams</h2>
-            <p style={{ color: '#64748b', fontSize: '15px' }}>Stay updated with upcoming entrance exams</p>
-          </div>
-          <Link to="/exams" style={{
-             background: 'white', color: '#2563eb', padding: '10px 24px',
-             borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px',
-             border: '1px solid #2563eb'
-          }}>View All Exams →</Link>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-          {getPaginatedList(featuredExams, examsPage).map(exam => <ExamCard key={exam._id} exam={exam} />)}
-        </div>
-        <PaginationControls current={examsPage} total={getPageCount(featuredExams)} onPageChange={setExamsPage} />
-      </section>
-
-      <section style={{ background: '#eff6ff', padding: '60px 0' }}>
-        <div className="container" style={{ padding: '0 24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-            <div>
-              <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginBottom: '8px', letterSpacing: '-0.5px' }}>Latest from Blog</h2>
-              <p style={{ color: '#64748b', fontSize: '15px' }}>Expert insights and career guidance</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>Latest News</h2>
+                <p style={{ color: '#64748b', marginTop: '6px' }}>Relevant admission and counselling updates to keep the homepage active.</p>
+              </div>
+              <Link to="/news" style={{ color: '#c2410c', fontWeight: 700 }}>View all news</Link>
             </div>
-            <Link to="/blogs" style={{
-               background: 'white', color: '#2563eb', padding: '10px 24px',
-               borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px',
-               border: '1px solid #2563eb'
-            }}>View All Blogs →</Link>
+            <div className="grid-4">
+              {news.slice(0, 4).map((item) => <NewsCard key={item._id} news={item} />)}
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-            {getPaginatedList(featuredBlogs, blogsPage).map(blog => <BlogCard key={blog._id} blog={blog} />)}
+
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '14px', flexWrap: 'wrap', marginBottom: '18px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>Featured Blogs</h2>
+                <p style={{ color: '#64748b', marginTop: '6px' }}>Career, exam and admission guidance with seeded content until backend grows.</p>
+              </div>
+              <Link to="/blogs" style={{ color: '#c2410c', fontWeight: 700 }}>View all blogs</Link>
+            </div>
+            <div className="grid-4">
+              {blogs.slice(0, 4).map((blog) => <BlogCard key={blog._id} blog={blog} />)}
+            </div>
           </div>
-          <PaginationControls current={blogsPage} total={getPageCount(featuredBlogs)} onPageChange={setBlogsPage} />
         </div>
       </section>
     </div>

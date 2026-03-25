@@ -1,46 +1,51 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import ExamCard from '../components/ExamCard';
 import { examAPI } from '../utils/api';
+import { paginateItems } from '../utils/content';
 
 const Exams = () => {
-  const [searchParams] = useSearchParams();
   const [exams, setExams] = useState([]);
-  const [pagination, setPagination] = useState({});
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchExams = async () => {
       setLoading(true);
       try {
-        const params = Object.fromEntries(searchParams.entries());
-        const res = await examAPI.getAll(params);
-        setExams(res.data.exams);
-        setPagination(res.data.pagination);
-      } catch (err) {
-        console.error('Failed to fetch exams:', err);
+        const res = await examAPI.getAll();
+        setExams(res.data.exams || []);
+      } catch (error) {
+        console.error('Failed to fetch exams:', error);
+        setExams([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     fetchExams();
-  }, [searchParams]);
+  }, []);
+
+  const { items, pagination } = paginateItems(exams, page, 6);
 
   return (
-    <div className="container" style={{ padding: '40px 24px' }}>
-      <div style={{ marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>Entrance Exams in India</h1>
-        <p style={{ color: '#64748b', fontSize: '15px' }}>Stay updated with exam dates, eligibility, syllabus, and more</p>
-      </div>
+    <div className="container" style={{ paddingTop: '34px' }}>
+      <section style={{ background: 'white', borderRadius: '30px', padding: '28px', border: '1px solid rgba(148,163,184,0.12)' }}>
+        <h1 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 900, color: '#0f172a' }}>Entrance Exams</h1>
+        <p style={{ marginTop: '10px', color: '#64748b', lineHeight: 1.8 }}>Search-ready exam cards with clear dates and responsive pagination.</p>
+      </section>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-        {loading ? [1, 2, 3, 4, 5, 6].map(i => <div key={i} style={{ height: '150px', background: '#e2e8f0', borderRadius: '16px' }} />) : exams.map(exam => <ExamCard key={exam._id} exam={exam} />)}
-      </div>
-
-      {exams.length === 0 && !loading && (
-        <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '16px' }}>
-          <h3 style={{ color: '#64748b' }}>No exams found</h3>
+      <section style={{ marginTop: '24px' }}>
+        <div className="grid-4">
+          {(loading ? [] : items).map((exam) => <ExamCard key={exam._id} exam={exam} />)}
         </div>
-      )}
+        {!loading && pagination.pages > 1 && (
+          <div style={{ marginTop: '22px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {Array.from({ length: pagination.pages }).map((_, index) => (
+              <button key={index + 1} onClick={() => setPage(index + 1)} style={{ width: '44px', height: '44px', borderRadius: '14px', border: page === index + 1 ? 'none' : '1px solid #e2e8f0', background: page === index + 1 ? '#0f172a' : 'white', color: page === index + 1 ? 'white' : '#334155', fontWeight: 800, cursor: 'pointer' }}>{index + 1}</button>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 };

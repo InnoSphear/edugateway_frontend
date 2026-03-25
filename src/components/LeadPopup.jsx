@@ -25,9 +25,19 @@ const LeadPopup = () => {
         localStorage.setItem('leadPopupShown', 'true');
       }
     };
+    const handleOpenPopup = (event) => {
+      if (event?.detail) {
+        setFormData((prev) => ({ ...prev, ...event.detail }));
+      }
+      setIsOpen(true);
+    };
     document.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('open-counselling-popup', handleOpenPopup);
     showPopup();
-    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('open-counselling-popup', handleOpenPopup);
+    };
   }, [showPopup]);
 
   const handleChange = (e) => {

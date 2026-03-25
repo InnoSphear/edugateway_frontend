@@ -1,20 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Sora:wght@100..800&display=swap');
 
 @import "tailwindcss";
 
 
 
 :root {
-  --font-family: "Outfit", sans-serif;
+  --font-family: "Manrope", sans-serif;
   --font-optical-sizing: auto;
   --font-weight: 500;
   --font-style: normal;
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #3b82f6;
-  --primary-bg: #eff6ff;
+  --primary: #f97316;
+  --primary-dark: #c2410c;
+  --primary-light: #fb923c;
+  --primary-bg: #fff7ed;
   --secondary: #0f172a;
-  --accent: #06b6d4;
+  --accent: #14b8a6;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -42,9 +42,12 @@ html {
 }
 
 body {
-  background: var(--bg-light);
+  background:
+    radial-gradient(circle at top left, rgba(251, 146, 60, 0.08), transparent 20%),
+    linear-gradient(180deg, #fffaf5 0%, #f8fafc 100%);
   color: var(--text-primary);
   line-height: 1.6;
+  font-family: var(--font-family);
 }
 
 a {
@@ -63,9 +66,13 @@ textarea {
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: "Sora", var(--font-family);
 }
 
 @media (max-width: 768px) {
@@ -156,5 +163,53 @@ textarea {
 @media (min-width: 769px) {
   .mobile-only {
     display: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.article-shell {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.meta-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1200px) {
+  .grid-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-4 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .article-shell {
+    padding: 28px 16px;
   }
 }

@@ -9,7 +9,7 @@ const AdminCollegeForm = () => {
 
   const [formData, setFormData] = useState({
     name: '', website: '', contact: '', logo: '', category: '', description: '', 
-    averagePlacement: '', image: '', facilities: ''
+    averagePlacement: '', highestPackage: '', brochureUrl: '', city: '', state: '', rating: '', established: '', ownership: 'Government', tags: '', highlights: '', image: '', facilities: ''
   });
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,6 +27,10 @@ const AdminCollegeForm = () => {
         name: c.name || '', website: c.website || '', contact: c.contact || '', 
         logo: c.logo || '', category: c.category || '', description: c.description || '', 
         averagePlacement: c.averagePlacement || '', 
+        highestPackage: c.highestPackage || '', brochureUrl: c.brochureUrl || '',
+        city: c.location?.city || '', state: c.location?.state || '', rating: c.rating || '',
+        established: c.established || '', ownership: c.ownership || 'Government',
+        tags: c.tags?.join(', ') || '', highlights: c.highlights?.join(', ') || '',
         image: c.image?.join(', ') || '', facilities: c.facilities?.join(', ') || ''
       });
       setCourses(c.course || []);
@@ -39,6 +43,11 @@ const AdminCollegeForm = () => {
     try {
       const data = {
         ...formData,
+        rating: formData.rating ? Number(formData.rating) : undefined,
+        established: formData.established ? Number(formData.established) : undefined,
+        tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
+        highlights: formData.highlights.split(',').map(t => t.trim()).filter(Boolean),
+        location: { city: formData.city.trim(), state: formData.state.trim() },
         image: formData.image.split(',').map(i => i.trim()).filter(Boolean),
         facilities: formData.facilities.split(',').map(f => f.trim()).filter(Boolean),
         course: courses
@@ -76,6 +85,13 @@ const AdminCollegeForm = () => {
             <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Logo URL *</label><input type="url" name="logo" value={formData.logo} onChange={handleChange} required style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
             <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Category *</label><input type="text" name="category" value={formData.category} onChange={handleChange} required style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
             <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Avg Placement *</label><input type="text" name="averagePlacement" value={formData.averagePlacement} onChange={handleChange} required style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Highest Package</label><input type="text" name="highestPackage" value={formData.highestPackage} onChange={handleChange} style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Brochure URL</label><input type="url" name="brochureUrl" value={formData.brochureUrl} onChange={handleChange} style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>City</label><input type="text" name="city" value={formData.city} onChange={handleChange} style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>State</label><input type="text" name="state" value={formData.state} onChange={handleChange} style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Rating</label><input type="number" step="0.1" name="rating" value={formData.rating} onChange={handleChange} style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Established</label><input type="number" name="established" value={formData.established} onChange={handleChange} style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Ownership</label><select name="ownership" value={formData.ownership} onChange={handleChange} style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }}><option>Government</option><option>Private</option><option>Deemed</option><option>Autonomous</option></select></div>
           </div>
           
           <div style={{ marginTop: '20px' }}>
@@ -86,6 +102,16 @@ const AdminCollegeForm = () => {
           <div style={{ marginTop: '20px' }}>
              <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Facilities (comma separated)</label>
              <input type="text" name="facilities" value={formData.facilities} onChange={handleChange} placeholder="e.g. WiFi, Library, Hostel" style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+          </div>
+
+          <div style={{ marginTop: '20px' }}>
+             <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Tags (comma separated)</label>
+             <input type="text" name="tags" value={formData.tags} onChange={handleChange} placeholder="engineering, featured, private-medical" style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+          </div>
+
+          <div style={{ marginTop: '20px' }}>
+             <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Highlights (comma separated)</label>
+             <input type="text" name="highlights" value={formData.highlights} onChange={handleChange} placeholder="Top placements, modern campus, strong faculty" style={{ width: '100%', padding: '12px 14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
           </div>
 
           <div style={{ marginTop: '20px' }}>

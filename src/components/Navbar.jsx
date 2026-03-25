@@ -1,17 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { openCounsellingPopup } from '../utils/popup';
+
+const primaryLinks = [
+
+  { label: 'Engineering', path: '/colleges?search=engineering' },
+  { label: 'Management', path: '/colleges?search=management' },
+ 
+  { label: 'Explore', path: '/colleges' },
+  { label: 'Exams', path: '/exams' },
+  { label: 'News', path: '/news' },
+  { label: 'Blogs', path: '/blogs' },
+];
 
 const Navbar = () => {
-  const { streams, user, setUser } = useApp();
+  const { user, setUser } = useApp();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const handleLogout = () => {
@@ -23,92 +35,65 @@ const Navbar = () => {
   return (
     <>
       <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
-        background: scrolled ? 'rgba(255,255,255,0.98)' : '#fff',
-        boxShadow: scrolled ? '0 4px 20px rgba(0,0,0,0.08)' : 'none',
-        backdropFilter: scrolled ? 'blur(10px)' : 'none',
-        transition: 'all 0.3s ease'
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: scrolled ? 'rgba(255,249,244,0.92)' : 'rgba(255,249,244,0.82)',
+        borderBottom: '1px solid rgba(148,163,184,0.18)',
+        backdropFilter: 'blur(18px)',
+        boxShadow: scrolled ? '0 18px 40px rgba(15,23,42,0.08)' : 'none',
       }}>
         <div className="container">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '72px' }}>
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-              <img src="/logo.png" alt="Education Gateway" style={{ width: '44px', height: '34px' }} />
-              <span style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.5px' }}>Education Gateway</span>
+          <div style={{ minHeight: '78px', display: 'flex', alignItems: 'center', gap: '18px', justifyContent: 'space-between' }}>
+            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img src="/logo.png" alt="Education Gateway" style={{ width: '44px', height: '44px', borderRadius: '12px', objectFit: 'contain', background: 'white', boxShadow: '0 10px 24px rgba(15,23,42,0.08)' }} />
+              <div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Education Gateway</div>
+                <div className="desktop-only" style={{ fontSize: '0.74rem', color: '#64748b' }}>Explore colleges, exams and admissions</div>
+              </div>
             </Link>
 
-            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: 'auto', marginRight: '24px', flexWrap: 'wrap' }}>
-              {[
-                { label: 'All Courses', path: '/courses' },
-                { label: 'B.Tech', path: '/streams/engineering' },
-                { label: 'MBA', path: '/streams/management' },
-                { label: 'M.Tech', path: '/streams/mtech' },
-                { label: 'MBBS', path: '/streams/medical' },
-                { label: 'B.Com', path: '/streams/commerce' },     
-                { label: 'Exams', path: '/exams' },
-                { label: 'News', path: '/news' },
-              ].map(link => (
+            <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {primaryLinks.map((link) => (
                 <Link key={link.label} to={link.path} style={{
-                  padding: '6px 10px', fontSize: '13px', fontWeight: 600,
-                  color: '#1e293b', textDecoration: 'none', transition: 'all 0.2s', borderRadius: '4px'
+                  padding: '10px 14px',
+                  borderRadius: '999px',
+                  color: '#334155',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
                 }}
-                  onMouseEnter={e => { e.target.style.color = '#f97316'; e.target.style.background = '#fff7ed'; }}
-                  onMouseLeave={e => { e.target.style.color = '#1e293b'; e.target.style.background = 'transparent'; }}
-                >{link.label}</Link>
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#fff1e8';
+                  e.target.style.color = '#c2410c';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.color = '#334155';
+                }}
+                >
+                  {link.label}
+                </Link>
               ))}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {user ? (
-                <div style={{ position: 'relative' }}>
-                  <button style={{
-                    background: '#f97316',
-                    color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px',
-                    fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px',
-                  }}
-                    onMouseEnter={e => e.target.style.background = '#ea580c'}
-                    onMouseLeave={e => e.target.style.background = '#f97316'}
-                  >
-                    <span>{user.name?.split(' ')[0]}</span>
-                    <svg style={{ width: 16, height: 16 }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-                  </button>
-                  <div style={{
-                    position: 'absolute', top: '100%', right: 0, marginTop: '8px',
-                    background: 'white', borderRadius: '12px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                    padding: '8px', minWidth: '180px', zIndex: 100, animation: 'slideDown 0.2s ease'
-                  }}>
-                    <Link to="/admin" style={{ display: 'block', padding: '12px 16px', color: '#374151', textDecoration: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 500 }}
-                      onMouseEnter={e => e.target.style.background = '#f1f5f9'}
-                      onMouseLeave={e => e.target.style.background = 'transparent'}>Dashboard</Link>
-                    <button onClick={handleLogout} style={{
-                      width: '100%', textAlign: 'left', padding: '12px 16px', color: '#dc2626',
-                      background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: '8px', fontSize: '14px'
-                    }}>Logout</button>
-                  </div>
-                </div>
+                <>
+                  <Link to="/admin" style={{ padding: '10px 16px', borderRadius: '999px', background: '#fff', border: '1px solid #e2e8f0', fontWeight: 700, fontSize: '0.9rem' }}>Dashboard</Link>
+                  <button onClick={handleLogout} style={{ padding: '10px 16px', borderRadius: '999px', border: 'none', background: '#0f172a', color: 'white', fontWeight: 700, cursor: 'pointer' }}>Logout</button>
+                </>
               ) : (
                 <>
-                  <Link to="/admin/login" style={{
-                    background: 'white', border: '1px solid #e2e8f0', color: '#0f172a', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px',
-                    fontWeight: 600, fontSize: '14px', transition: 'all 0.2s'
-                  }}
-                    onMouseEnter={e => { e.target.style.background = '#f8fafc'; e.target.style.borderColor = '#cbd5e1'; }}
-                    onMouseLeave={e => { e.target.style.background = 'white'; e.target.style.borderColor = '#e2e8f0'; }}
-                  >Log In</Link>
-                  <Link to="/admin/login" className="desktop-only" style={{
-                    background: '#f97316', color: 'white', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px',
-                    fontWeight: 600, fontSize: '14px', transition: 'all 0.2s', border: 'none'
-                  }}
-                    onMouseEnter={e => e.target.style.background = '#ea580c'}
-                    onMouseLeave={e => e.target.style.background = '#f97316'}
-                  >Sign Up</Link>
+                  <Link to="/admin/login" className="desktop-only" style={{ padding: '10px 16px', borderRadius: '999px', background: '#fff', border: '1px solid #e2e8f0', fontWeight: 700, fontSize: '0.9rem' }}>Login</Link>
+                  <button onClick={() => openCounsellingPopup()} className="desktop-only" style={{ padding: '10px 16px', borderRadius: '999px', background: '#f97316', color: 'white', fontWeight: 700, fontSize: '0.9rem', border: 'none', cursor: 'pointer' }}>Get Counselling</button>
                 </>
               )}
 
-              <button onClick={() => setMobileOpen(true)} className="mobile-only" style={{
-                background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <svg style={{ width: 24, height: 24, color: '#475569' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+              <button className="mobile-only" onClick={() => setMobileOpen(true)} style={{ background: 'white', border: '1px solid #e2e8f0', width: '42px', height: '42px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.1rem' }}>
+                ☰
               </button>
             </div>
           </div>
@@ -116,40 +101,25 @@ const Navbar = () => {
       </nav>
 
       {mobileOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100 }} onClick={() => setMobileOpen(false)}>
-          <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '85%', maxWidth: '360px', background: 'white', animation: 'slideDown 0.3s ease' }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a' }}>Menu</span>
-              <button onClick={() => setMobileOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px' }}>
-                <svg style={{ width: 24, height: 24, color: '#64748b' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, background: 'rgba(15,23,42,0.44)' }} onClick={() => setMobileOpen(false)}>
+          <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 'min(88vw, 360px)', background: '#fffaf5', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <strong style={{ fontSize: '1.05rem' }}>Menu</strong>
+              <button onClick={() => setMobileOpen(false)} style={{ width: '38px', height: '38px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>✕</button>
             </div>
-            <div style={{ padding: '16px', overflowY: 'auto', maxHeight: 'calc(100vh - 80px)' }}>
-              <Link to="/colleges" onClick={() => setMobileOpen(false)} style={{ display: 'block', padding: '14px 0', color: '#374151', textDecoration: 'none', fontSize: '15px', fontWeight: 500, borderBottom: '1px solid #f1f5f9' }}>All Colleges</Link>
-              <Link to="/exams" onClick={() => setMobileOpen(false)} style={{ display: 'block', padding: '14px 0', color: '#374151', textDecoration: 'none', fontSize: '15px', fontWeight: 500, borderBottom: '1px solid #f1f5f9' }}>Exams</Link>
-              <Link to="/news" onClick={() => setMobileOpen(false)} style={{ display: 'block', padding: '14px 0', color: '#374151', textDecoration: 'none', fontSize: '15px', fontWeight: 500, borderBottom: '1px solid #f1f5f9' }}>News</Link>
-              <Link to="/blogs" onClick={() => setMobileOpen(false)} style={{ display: 'block', padding: '14px 0', color: '#374151', textDecoration: 'none', fontSize: '15px', fontWeight: 500, borderBottom: '1px solid #f1f5f9' }}>Blog</Link>
-              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
-                <p style={{ fontSize: '13px', fontWeight: 600, color: '#94a3b8', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Menu</p>
-                {[
-                  { label: 'All Streams', path: '/streams' },
-                  { label: 'All Courses', path: '/courses' },
-                  { label: 'Engineering', path: '/streams/engineering' },
-                  { label: 'Management', path: '/streams/management' },
-                  { label: 'Medical', path: '/streams/medical' },
-                  { label: 'Design', path: '/streams/design' },
-                  { label: 'Explore', path: '/colleges' },
-                  { label: 'Online', path: '/online' }
-                ].map(link => (
-                  <Link key={link.label} to={link.path} onClick={() => setMobileOpen(false)} style={{ display: 'block', padding: '12px 0', color: '#475569', textDecoration: 'none', fontSize: '15px', fontWeight: 500, borderBottom: '1px solid #f8fafc' }}>{link.label}</Link>
-                ))}
-              </div>
-            </div>
+            {primaryLinks.map((link) => (
+              <Link key={link.label} to={link.path} onClick={() => setMobileOpen(false)} style={{ padding: '12px 14px', borderRadius: '14px', background: 'white', border: '1px solid rgba(148,163,184,0.16)', fontWeight: 600, color: '#334155' }}>
+                {link.label}
+              </Link>
+            ))}
+            <button onClick={() => { setMobileOpen(false); openCounsellingPopup(); }} style={{ marginTop: '8px', padding: '12px 14px', borderRadius: '14px', background: '#f97316', color: 'white', fontWeight: 700, textAlign: 'center', border: 'none', cursor: 'pointer' }}>
+              Talk to Expert
+            </button>
           </div>
         </div>
       )}
 
-      <div style={{ height: '72px' }} />
+      <div style={{ height: '78px' }} />
     </>
   );
 };
