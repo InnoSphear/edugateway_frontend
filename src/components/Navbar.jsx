@@ -115,6 +115,11 @@ const Navbar = () => {
             <button onClick={() => { setMobileOpen(false); openCounsellingPopup(); }} style={{ marginTop: '8px', padding: '12px 14px', borderRadius: '14px', background: '#f97316', color: 'white', fontWeight: 700, textAlign: 'center', border: 'none', cursor: 'pointer' }}>
               Talk to Expert
             </button>
+
+             <>
+                  <Link to="/admin/login" className="desktop-only" style={{ padding: '10px 16px', borderRadius: '999px', background: '#fff', border: '1px solid #e2e8f0', fontWeight: 700, fontSize: '0.9rem' }}>Login</Link>
+                  <button onClick={() => openCounsellingPopup()} className="desktop-only" style={{ padding: '10px 16px', borderRadius: '999px', background: '#f97316', color: 'white', fontWeight: 700, fontSize: '0.9rem', border: 'none', cursor: 'pointer' }}>Get Counselling</button>
+                </>
           </div>
         </div>
       )}
