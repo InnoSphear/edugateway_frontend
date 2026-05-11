@@ -48,9 +48,9 @@ const Footer = () => (
         <div>
           <h4 style={{ fontSize: '0.98rem', fontWeight: 800, marginBottom: '14px' }}>Helpdesk</h4>
           <div style={{ display: 'grid', gap: '10px', color: '#cbd5e1', fontSize: '0.94rem' }}>
-            <span>Regular Helpdesk: +91 95997 49001</span>
-            <span>Online Helpdesk: +91 97178 19001</span>
-            <span>Email: support@educationgateway.com</span>
+            <span>Regular Helpdesk: +91 9880502656</span>
+            <span>Online Helpdesk: +91 9880502656</span>
+            <span>Email: contact@educationgateway.in</span>
             <span>New Delhi, India</span>
           </div>
         </div>
